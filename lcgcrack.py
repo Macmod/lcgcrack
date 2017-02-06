@@ -84,4 +84,3 @@ for n in range(max_seen, max_seen+n_tests):
 
 print 'Bad sequence or modulus not in range! Try again.'
 prng.close()
-exit(0)
