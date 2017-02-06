@@ -1,7 +1,7 @@
 from pwn import process
 import gmpy
 
-# Linear Congruentional Generator
+# Linear Congruential Generator
 def lcg(seed, a, c, m):
     last = seed
     while True:
