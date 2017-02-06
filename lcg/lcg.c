@@ -33,12 +33,12 @@ void main() {
 
             if (guess != current) {
                 printf("Goodbye.\n");
-                exit(1);
+                exit(0);
             } else {
                 count++;
                 if (count == G){
                     printf("ALEXCTF{f0cfad89693ec6787a75fa4e53d8bdb5}\n");
-                    exit(1);
+                    exit(0);
                 }
             }
         } else {
