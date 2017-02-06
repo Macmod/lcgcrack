@@ -1,4 +1,6 @@
-from pwn import process
+#!/usr/bin/python2
+from pwn import process, remote
+from sys import exit
 import gmpy
 
 # Linear Congruential Generator
@@ -24,9 +26,12 @@ def send_next(prng, n):
 prng = process('lcg/lcg')
 
 # Sequence from remote PRNG
-seq = [get_next(prng) for k in range(6)]
-print('Got this sequence to analyze: ')
-print(seq)
+# Sample should be any number > 3
+# (3 to solve the equation, other values for validation)
+sample = 6
+seq = [get_next(prng) for k in range(sample)]
+print 'Got this sequence to analyze: '
+print seq
 
 # Equation from 3 sequence values:
 # 842389455, 3301052331, 1833279318
@@ -73,4 +78,10 @@ for n in range(max_seen, max_seen+n_tests):
                 print '[SEND]', num
                 send_next(prng, num)
 
-            print(prng.recv(1024))
+            print(prng.recvall())
+            prng.close()
+            exit(0)
+
+print 'Bad sequence or modulus not in range! Try again.'
+prng.close()
+exit(0)
