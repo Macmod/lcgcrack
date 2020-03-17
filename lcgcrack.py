@@ -43,15 +43,6 @@ def remote_prng():
         'port': 7412
     })
 
-# Setting up PRNG
-prng = my_prng()
-
-# Sequence from remote PRNG
-# Sample should be any number > 3
-# (3 to solve the equation, other values for validation)
-sample_n = 7
-seq = get_seq(prng, sample_n)
-
 # Equation from 3 sequence values:
 # 842389455, 3301052331, 1833279318
 
@@ -67,7 +58,7 @@ def get_a(m, seq):
 
     return (inv * (seq[1] - seq[2])) % m
 
-def check_values(a,c,n):
+def check_values(prng,a,c,n,seq):
     # Create an LCG with initial value = seq[0]
     # And test whether it produces the same values
     candidate_lcg = lcg(seq[0], a, c, n)
@@ -75,7 +66,6 @@ def check_values(a,c,n):
     for i in seq:
         if next(candidate_lcg) != i:
             flag = False
-
     # If so, show values for N, A and C
     # Then generate ten next values and send
     if flag == True:
@@ -87,6 +77,7 @@ def check_values(a,c,n):
 
         print(prng.recvall())
         return True
+    return False
 
 # Test a bunch of modulus
 def find_modulus(prng, seq, start, n_tests):
@@ -95,14 +86,14 @@ def find_modulus(prng, seq, start, n_tests):
         if a != 0: # If an a exists
             # Figure out the c for this a
             c = (seq[1] - seq[0]*a) % n
-            return check_values(a,c,n)
-
+            if (check_values(prng,a,c,n,seq) == True):
+                return True
     return False
 
-def crackfast(seq):
+def crackwithmultiples(prng,seq):
     try:
         modulus, multiplier, increment = lcgcrackmultiples.crack(seq)
-        return check_values(multiplier,increment,modulus)
+        return check_values(prng,multiplier,increment,modulus,seq)
     except:
         return False
 
@@ -111,33 +102,50 @@ def crackfast(seq):
 max_seen = 4294915818
 # Amount of numbers to test after the observed maximum
 n_tests = 1000000
+# Sequence from remote PRNG
+# Sample should be any number > 3
+# (3 to solve the equation, other values for validation)
+sample_n = 6
+
+# Setting up PRNG
+prng = my_prng()
+# Sequence from remote PRNG
+seq = get_seq(prng, sample_n)
 
 start = time.time()
 print("\nMethod using multiples (cf. https://tailcall.net/blog/cracking-randomness-lcgs/):")
-done = crackfast(seq)
+done = crackwithmultiples(prng,seq)
 while not done:
     print('[NOT FOUND] Modular inverse not found!')
     print('Fetching another sequence and trying again.')
-    prng.close()
+    try:
+        prng.close()
+    except IOError:
+        print("Problem closing prng")
     prng = my_prng()
     seq = get_seq(prng, sample_n)
-    done = crackfast(seq)
+    done = crackwithmultiples(prng,seq)
 end = time.time()
 print("Took: ",end-start)
+prng.close()
+
+prng = my_prng()
+seq = get_seq(prng, sample_n)
 
 start = time.time()
-print("Method using bruteforce on modulus:")
+print("\nMethod using bruteforce on modulus:")
 done = find_modulus(prng, seq, max_seen, n_tests)
 while not done:
     print('[NOT FOUND] Bad seed or modulus not in range!')
     print('Fetching another sequence and trying again.')
-    prng.close()
+    try:
+        prng.close()
+    except IOError:
+        print("Problem closing prng")
     prng = my_prng()
     seq = get_seq(prng, sample_n)
     done = find_modulus(prng, seq, max_seen, n_tests)
-    done = crackfast(seq)
 end = time.time()
 print("Took: ",end-start)
-
 prng.close()
 
