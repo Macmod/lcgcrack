@@ -11,6 +11,10 @@ The `lcg` folder contains a reconstruction of the specific LCG used for the chal
 
 This LCG is the one used in `lcgcrack.py`, although for the challenge source code was not provided.
 
+# Installation
+
+To run the code you need `gmpy`. You can install it for python3 using `pip3 install gmpy`.
+
 # License
 The MIT License (MIT)
 
